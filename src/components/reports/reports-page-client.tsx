@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/clients/status-badge";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "@/components/ui/toast";
 import type { ArchivedClient, Report } from "@/lib/database.types";
+import { getCurrentUserId } from "@/lib/auth";
 import { formatCurrency } from "@/lib/orders";
 import {
   downloadReportPdf,
@@ -109,6 +110,7 @@ export function ReportsPageClient() {
       return;
     }
 
+    const userId = await getCurrentUserId();
     const { error: restoreError } = await supabase.from("clients").insert({
       business_type:
         reportData?.client.business_type ??
@@ -118,6 +120,7 @@ export function ReportsPageClient() {
       id: archive.id,
       name: archive.name,
       phone: archive.phone,
+      user_id: userId,
     });
 
     if (restoreError) {

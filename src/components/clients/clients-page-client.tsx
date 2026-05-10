@@ -6,6 +6,7 @@ import { MessageCircle, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "@/components/ui/toast";
 import type { Client, Order, OrderStatus } from "@/lib/database.types";
+import { getCurrentUserId } from "@/lib/auth";
 import { formatCurrency, orderStatusLabels } from "@/lib/orders";
 import { supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -341,11 +342,13 @@ function AddClientModal({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const userId = await getCurrentUserId();
     const payload = {
       business_type: String(formData.get("business_type") ?? "").trim() || null,
       email: String(formData.get("email") ?? "").trim() || null,
       name: String(formData.get("name") ?? "").trim(),
       phone: String(formData.get("phone") ?? "").trim(),
+      user_id: userId,
     };
 
     const { error: insertError } = await supabase.from("clients").insert(payload);

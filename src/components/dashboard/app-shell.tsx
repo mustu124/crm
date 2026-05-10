@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   Boxes,
   CreditCard,
   LayoutDashboard,
+  LogOut,
   LucideIcon,
   UsersRound,
 } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const navItems: Array<{
   label: string;
@@ -25,54 +28,83 @@ const navItems: Array<{
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { signOut, session } = useAuth();
+
+  async function handleLogout() {
+    await signOut();
+    router.replace("/login");
+  }
 
   return (
-    <div className="min-h-screen pb-24 text-foreground lg:pb-0">
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-72 border-r border-border/80 bg-card/90 px-4 py-5 shadow-card backdrop-blur-xl lg:block">
-        <Brand />
-        <nav className="mt-8 space-y-2">
-          {navItems.map((item) => {
-            const active = item.href !== "#" && pathname.startsWith(item.href);
+    <ProtectedRoute>
+      <div className="min-h-screen pb-24 text-foreground lg:pb-0">
+        <aside className="fixed left-0 top-0 z-30 hidden h-screen w-72 border-r border-border/80 bg-card/90 px-4 py-5 shadow-card backdrop-blur-xl lg:block">
+          <Brand />
+          <nav className="mt-8 space-y-2">
+            {navItems.map((item) => {
+              const active = item.href !== "#" && pathname.startsWith(item.href);
 
-            return <NavLink key={item.label} {...item} active={active} />;
-          })}
+              return <NavLink key={item.label} {...item} active={active} />;
+            })}
+          </nav>
+          <div className="absolute bottom-5 left-4 right-4 space-y-3">
+            <div className="rounded-2xl border border-border bg-clay-50 p-4">
+              <p className="text-sm font-semibold text-clay-900">
+                Signed in
+              </p>
+              <p className="mt-1 truncate text-sm leading-5 text-muted-foreground">
+                {session?.user.email}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-black text-muted-foreground transition hover:bg-red-50 hover:text-red-700"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        <main className="mx-auto w-full px-4 py-4 sm:px-6 lg:ml-72 lg:w-[calc(100%-18rem)] lg:max-w-none lg:px-8 lg:py-8">
+          {children}
+        </main>
+
+        <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-2 py-2 shadow-[0_-18px_40px_-30px_rgba(92,54,30,0.65)] backdrop-blur-xl lg:hidden">
+          <div className="mx-auto grid max-w-xl grid-cols-6 gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = item.href !== "#" && pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[0.66rem] font-semibold transition ${
+                    active
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" aria-hidden />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[0.66rem] font-semibold text-muted-foreground transition hover:bg-red-50 hover:text-red-700"
+            >
+              <LogOut className="h-5 w-5" aria-hidden />
+              <span>Logout</span>
+            </button>
+          </div>
         </nav>
-        <div className="absolute bottom-5 left-4 right-4 rounded-2xl border border-border bg-clay-50 p-4">
-          <p className="text-sm font-semibold text-clay-900">Today looks steady</p>
-          <p className="mt-1 text-sm leading-5 text-muted-foreground">
-            6 orders need a quick check before evening dispatch.
-          </p>
-        </div>
-      </aside>
-
-      <main className="mx-auto w-full px-4 py-4 sm:px-6 lg:ml-72 lg:w-[calc(100%-18rem)] lg:max-w-none lg:px-8 lg:py-8">
-        {children}
-      </main>
-
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-3 py-2 shadow-[0_-18px_40px_-30px_rgba(92,54,30,0.65)] backdrop-blur-xl lg:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = item.href !== "#" && pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[0.72rem] font-semibold transition ${
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-5 w-5" aria-hidden />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
 

@@ -5,6 +5,7 @@ import { Boxes, Minus, Plus, Search, Trash2 } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "@/components/ui/toast";
 import type { InventoryItem, InventoryLog } from "@/lib/database.types";
+import { getCurrentUserId } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 type StockStatus = "OK" | "Low" | "Critical";
@@ -360,6 +361,7 @@ function AddItemModal({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const userId = await getCurrentUserId();
     const quantity = Number(formData.get("quantity") ?? 0);
 
     const { data, error: insertError } = await supabase
@@ -370,6 +372,7 @@ function AddItemModal({
         name: String(formData.get("name") ?? "").trim(),
         quantity,
         unit: String(formData.get("unit") ?? "").trim(),
+        user_id: userId,
       })
       .select()
       .single();
@@ -385,6 +388,7 @@ function AddItemModal({
         change_amount: quantity,
         item_id: data.id,
         reason: "Opening stock",
+        user_id: userId,
       });
     }
 
@@ -431,6 +435,7 @@ function UpdateStockModal({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const userId = await getCurrentUserId();
     const itemId = String(formData.get("item_id") ?? "");
     const direction = String(formData.get("direction") ?? "in");
     const amount = Math.abs(Number(formData.get("amount") ?? 0));
@@ -460,6 +465,7 @@ function UpdateStockModal({
       change_amount: changeAmount,
       item_id: item.id,
       reason: String(formData.get("reason") ?? "").trim() || "Stock update",
+      user_id: userId,
     });
 
     if (logError) {

@@ -16,6 +16,7 @@ import { StatusBadge } from "@/components/clients/status-badge";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "@/components/ui/toast";
 import type { Client, Order, OrderStatus } from "@/lib/database.types";
+import { getCurrentUserId } from "@/lib/auth";
 import {
   formatCurrency,
   nextOrderStatus,
@@ -156,12 +157,14 @@ export function ClientProfileClient({ clientId }: { clientId: string }) {
     setArchiving(true);
     setError(null);
 
+    const userId = await getCurrentUserId();
     const reportData = buildReportData(client, orders);
     const { data: report, error: reportError } = await supabase
       .from("reports")
       .insert({
         client_id: client.id,
         report_data: reportData,
+        user_id: userId,
       })
       .select()
       .single();
@@ -190,6 +193,7 @@ export function ClientProfileClient({ clientId }: { clientId: string }) {
           totalValue: reportData.paymentSummary.total,
         },
         tags: reportData.tags,
+        user_id: userId,
       });
 
     if (archiveError) {
@@ -485,6 +489,7 @@ function AddOrderModal({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const userId = await getCurrentUserId();
     const totalValue = Number(formData.get("total_value") ?? 0);
     const advancePaid = Number(formData.get("advance_paid") ?? 0);
 
@@ -496,6 +501,7 @@ function AddOrderModal({
       status: formData.get("status") as OrderStatus,
       title: String(formData.get("title") ?? "").trim(),
       total_value: totalValue,
+      user_id: userId,
     });
 
     if (insertError) {

@@ -7,6 +7,7 @@ export type OrderStatus =
 
 export type Client = {
   id: string;
+  user_id: string | null;
   name: string;
   phone: string;
   email: string | null;
@@ -16,6 +17,7 @@ export type Client = {
 
 export type Order = {
   id: string;
+  user_id: string | null;
   client_id: string;
   title: string;
   status: OrderStatus;
@@ -28,6 +30,7 @@ export type Order = {
 
 export type InventoryItem = {
   id: string;
+  user_id: string | null;
   name: string;
   category: string | null;
   unit: string;
@@ -38,6 +41,7 @@ export type InventoryItem = {
 
 export type InventoryLog = {
   id: string;
+  user_id: string | null;
   item_id: string;
   change_amount: number;
   reason: string | null;
@@ -59,6 +63,7 @@ export type ReportData = {
 
 export type Report = {
   id: string;
+  user_id: string | null;
   client_id: string;
   report_data: ReportData;
   pdf_url: string | null;
@@ -67,6 +72,7 @@ export type Report = {
 
 export type ArchivedClient = {
   id: string;
+  user_id: string | null;
   name: string;
   phone: string;
   last_project_date: string | null;
@@ -90,6 +96,7 @@ export type Database = {
         Row: Client;
         Insert: {
           id?: string;
+          user_id: string;
           name: string;
           phone: string;
           email?: string | null;
@@ -103,6 +110,7 @@ export type Database = {
         Row: Order;
         Insert: {
           id?: string;
+          user_id: string;
           client_id: string;
           title: string;
           status?: OrderStatus;
@@ -127,6 +135,7 @@ export type Database = {
         Row: InventoryItem;
         Insert: {
           id?: string;
+          user_id: string;
           name: string;
           category?: string | null;
           unit: string;
@@ -141,6 +150,7 @@ export type Database = {
         Row: InventoryLog;
         Insert: {
           id?: string;
+          user_id: string;
           item_id: string;
           change_amount: number;
           reason?: string | null;
@@ -161,6 +171,7 @@ export type Database = {
         Row: Report;
         Insert: {
           id?: string;
+          user_id: string;
           client_id: string;
           report_data: ReportData;
           pdf_url?: string | null;
@@ -173,6 +184,7 @@ export type Database = {
         Row: ArchivedClient;
         Insert: {
           id: string;
+          user_id: string;
           name: string;
           phone: string;
           last_project_date?: string | null;
