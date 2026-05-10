@@ -1,7 +1,9 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Minus, Plus, Search } from "lucide-react";
+import { Boxes, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Toast } from "@/components/ui/toast";
 import type { InventoryItem, InventoryLog } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 
@@ -15,6 +17,12 @@ export function InventoryPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "success" | "error";
+  } | null>(null);
 
   const loadInventory = useCallback(async () => {
     setLoading(true);
@@ -59,6 +67,50 @@ export function InventoryPageClient() {
   const lowStockCount = items.filter(
     (item) => getStockStatus(item) !== "OK",
   ).length;
+
+  function showToast(message: string, tone: "success" | "error" = "success") {
+    setToast({ message, tone });
+    window.setTimeout(() => setToast(null), 3200);
+  }
+
+  async function deleteInventoryItem() {
+    if (!itemToDelete) {
+      return;
+    }
+
+    setDeleting(true);
+    const { error: logsError } = await supabase
+      .from("inventory_logs")
+      .delete()
+      .eq("item_id", itemToDelete.id);
+
+    if (logsError) {
+      showToast(logsError.message, "error");
+      setDeleting(false);
+      return;
+    }
+
+    const { error: itemError } = await supabase
+      .from("inventory_items")
+      .delete()
+      .eq("id", itemToDelete.id);
+
+    if (itemError) {
+      showToast(itemError.message, "error");
+      setDeleting(false);
+      return;
+    }
+
+    setItems((currentItems) =>
+      currentItems.filter((item) => item.id !== itemToDelete.id),
+    );
+    setLogs((currentLogs) =>
+      currentLogs.filter((log) => log.item_id !== itemToDelete.id),
+    );
+    showToast(`${itemToDelete.name} was deleted.`);
+    setItemToDelete(null);
+    setDeleting(false);
+  }
 
   return (
     <div className="space-y-5 lg:space-y-6">
@@ -127,6 +179,7 @@ export function InventoryPageClient() {
               key={item.id}
               item={item}
               logs={logs.filter((log) => log.item_id === item.id).slice(0, 4)}
+              onDelete={() => setItemToDelete(item)}
               onUpdate={() => setStockOpen(true)}
             />
           ))}
@@ -169,6 +222,19 @@ export function InventoryPageClient() {
           }}
         />
       ) : null}
+
+      {itemToDelete ? (
+        <ConfirmModal
+          title="Delete inventory item?"
+          description="This will permanently delete this item and all stock movement logs linked to it."
+          confirmLabel="Delete Item"
+          working={deleting}
+          onCancel={() => setItemToDelete(null)}
+          onConfirm={deleteInventoryItem}
+        />
+      ) : null}
+
+      {toast ? <Toast message={toast.message} tone={toast.tone} /> : null}
     </div>
   );
 }
@@ -176,9 +242,11 @@ export function InventoryPageClient() {
 function InventoryCard({
   item,
   logs,
+  onDelete,
 }: {
   item: InventoryItem;
   logs: InventoryLog[];
+  onDelete: () => void;
   onUpdate: () => void;
 }) {
   const status = getStockStatus(item);
@@ -205,11 +273,21 @@ function InventoryCard({
             {item.category ?? "Uncategorized"}
           </p>
         </div>
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-black ${statusClasses[status]}`}
-        >
-          {status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-black ${statusClasses[status]}`}
+          >
+            {status}
+          </span>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-red-50 hover:text-red-700"
+            title="Delete inventory item"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 flex items-end justify-between gap-4">

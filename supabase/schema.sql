@@ -99,8 +99,10 @@ drop policy if exists "Prototype delete orders" on public.orders;
 drop policy if exists "Prototype read inventory items" on public.inventory_items;
 drop policy if exists "Prototype insert inventory items" on public.inventory_items;
 drop policy if exists "Prototype update inventory items" on public.inventory_items;
+drop policy if exists "Prototype delete inventory items" on public.inventory_items;
 drop policy if exists "Prototype read inventory logs" on public.inventory_logs;
 drop policy if exists "Prototype insert inventory logs" on public.inventory_logs;
+drop policy if exists "Prototype delete inventory logs" on public.inventory_logs;
 drop policy if exists "Prototype read reports" on public.reports;
 drop policy if exists "Prototype insert reports" on public.reports;
 drop policy if exists "Prototype update reports" on public.reports;
@@ -161,6 +163,11 @@ create policy "Prototype update inventory items"
   using (true)
   with check (true);
 
+create policy "Prototype delete inventory items"
+  on public.inventory_items for delete
+  to anon, authenticated
+  using (true);
+
 create policy "Prototype read inventory logs"
   on public.inventory_logs for select
   to anon, authenticated
@@ -170,6 +177,11 @@ create policy "Prototype insert inventory logs"
   on public.inventory_logs for insert
   to anon, authenticated
   with check (true);
+
+create policy "Prototype delete inventory logs"
+  on public.inventory_logs for delete
+  to anon, authenticated
+  using (true);
 
 create policy "Prototype read reports"
   on public.reports for select
